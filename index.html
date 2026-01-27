@@ -15,6 +15,26 @@
 </head>
 <body>
     <div id="app">
+        <!-- World/Map Selector Bar -->
+        <div class="selector-bar" id="selector-bar">
+            <div class="selector-group">
+                <label>World:</label>
+                <select id="world-select">
+                    <option value="">Select a world...</option>
+                </select>
+                <button id="btn-new-world" class="small-btn" title="Create New World">+</button>
+                <button id="btn-edit-world" class="small-btn" title="Edit World">Edit</button>
+            </div>
+            <div class="selector-group">
+                <label>Map:</label>
+                <select id="map-select" disabled>
+                    <option value="">Select a map...</option>
+                </select>
+                <button id="btn-new-map" class="small-btn" title="Create New Map" disabled>+</button>
+                <button id="btn-edit-map" class="small-btn" title="Edit Map" disabled>Edit</button>
+            </div>
+        </div>
+
         <!-- Top Toolbar -->
         <header class="toolbar">
             <div class="toolbar-left">
@@ -225,9 +245,61 @@
             </div>
         </div>
 
+        <!-- World Edit Modal -->
+        <div class="modal" id="modal-world" style="display: none;">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2 id="modal-world-title">New World</h2>
+                    <button class="modal-close" id="btn-world-modal-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="world-name">World Name</label>
+                        <input type="text" id="world-name" placeholder="Middle-earth, Westeros, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label for="world-description">Description</label>
+                        <textarea id="world-description" rows="3" placeholder="Describe your world..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-delete-world" class="btn-danger" style="display: none;">Delete World</button>
+                    <button id="btn-save-world" class="btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Edit Modal -->
+        <div class="modal" id="modal-map" style="display: none;">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2 id="modal-map-title">New Map</h2>
+                    <button class="modal-close" id="btn-map-modal-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="map-name">Map Name</label>
+                        <input type="text" id="map-name" placeholder="Regional map, city map, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label>Map Image</label>
+                        <button id="btn-map-image-upload" class="action-btn" style="width: 100%;">
+                            Choose Image...
+                        </button>
+                        <p id="map-image-info" class="form-help"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-delete-map" class="btn-danger" style="display: none;">Delete Map</button>
+                    <button id="btn-save-map" class="btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+
         <!-- File Input (hidden) -->
         <input type="file" id="file-map-upload" accept="image/*" style="display: none;">
         <input type="file" id="file-load-project" accept=".json" style="display: none;">
+        <input type="file" id="file-map-image" accept="image/*" style="display: none;">
     </div>
 
     <!-- Leaflet JS -->
@@ -236,6 +308,7 @@
             crossorigin=""></script>
 
     <!-- App Scripts -->
+    <script src="js/api.js"></script>
     <script src="js/stamps.js"></script>
     <script src="js/travel.js"></script>
     <script src="js/map.js"></script>

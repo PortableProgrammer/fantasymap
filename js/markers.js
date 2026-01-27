@@ -21,25 +21,80 @@ const MarkersModule = {
      * Initialize markers module
      */
     init() {
-        this.loadLocations();
+        // Don't auto-load from localStorage - will be loaded from API
+        this.locations = [];
+        this.leafletMarkers = {};
+        this.selectedLocation = null;
     },
 
     /**
-     * Load locations from storage
+     * Load locations from API response
      */
-    loadLocations() {
-        const saved = localStorage.getItem('fantasymap_locations');
-        if (saved) {
-            this.locations = JSON.parse(saved);
-            this.renderAllMarkers();
+    loadLocations(locations) {
+        this.clearAll();
+        this.locations = locations.map(loc => ({
+            ...loc,
+            // Normalize field names for compatibility
+            stampId: loc.stamp_id || loc.stampId,
+            wikiLink: loc.wiki_link || loc.wikiLink
+        }));
+        this.renderAllMarkers();
+    },
+
+    /**
+     * Add a location from API response
+     */
+    addLocationFromAPI(location) {
+        const normalizedLoc = {
+            ...location,
+            stampId: location.stamp_id || location.stampId,
+            wikiLink: location.wiki_link || location.wikiLink
+        };
+        this.locations.push(normalizedLoc);
+        this.renderMarker(normalizedLoc);
+        return normalizedLoc;
+    },
+
+    /**
+     * Update a location from API response
+     */
+    updateLocationFromAPI(location) {
+        const index = this.locations.findIndex(loc => loc.id === location.id);
+        if (index === -1) return null;
+
+        const normalizedLoc = {
+            ...location,
+            stampId: location.stamp_id || location.stampId,
+            wikiLink: location.wiki_link || location.wikiLink
+        };
+
+        this.locations[index] = normalizedLoc;
+        this.updateMarker(normalizedLoc);
+
+        if (this.onLocationUpdate) {
+            this.onLocationUpdate(normalizedLoc);
         }
+
+        return normalizedLoc;
     },
 
     /**
-     * Save locations to storage
+     * Remove a location by ID
      */
-    saveLocations() {
-        localStorage.setItem('fantasymap_locations', JSON.stringify(this.locations));
+    removeLocation(id) {
+        const index = this.locations.findIndex(loc => loc.id === id);
+        if (index === -1) return;
+
+        this.locations.splice(index, 1);
+
+        if (this.leafletMarkers[id]) {
+            MapModule.markersLayer.removeLayer(this.leafletMarkers[id]);
+            delete this.leafletMarkers[id];
+        }
+
+        if (this.selectedLocation && this.selectedLocation.id === id) {
+            this.selectedLocation = null;
+        }
     },
 
     /**
@@ -136,7 +191,8 @@ const MarkersModule = {
      * @returns {L.Marker}
      */
     createMarker(location) {
-        const stamp = StampManager.getStamp(location.stampId);
+        const stampId = location.stamp_id || location.stampId;
+        const stamp = StampManager.getStamp(stampId);
         const icon = stamp ? stamp.icon : '📍';
 
         const marker = L.marker(MapModule.coordsToLatLng(location.x, location.y), {

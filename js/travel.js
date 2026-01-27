@@ -34,16 +34,27 @@ const TravelCalculator = {
      * Initialize travel calculator
      */
     init() {
-        // Load settings from storage
-        const savedSettings = localStorage.getItem('fantasymap_travel');
-        if (savedSettings) {
-            const settings = JSON.parse(savedSettings);
-            this.speeds = settings.speeds || { ...this.defaultSpeeds };
-            this.hoursPerDay = settings.hoursPerDay || 8;
-            this.scale = settings.scale || this.scale;
-        } else {
-            this.speeds = { ...this.defaultSpeeds };
-        }
+        // Start with defaults - settings loaded from API per-world
+        this.speeds = { ...this.defaultSpeeds };
+        this.hoursPerDay = 8;
+        this.scale = {
+            pixelsPerUnit: 1,
+            unit: 'miles'
+        };
+    },
+
+    /**
+     * Load settings from API response
+     */
+    loadSettings(settings) {
+        if (!settings) return;
+
+        this.speeds = {
+            walking: settings.walking_speed || this.defaultSpeeds.walking,
+            horse: settings.horse_speed || this.defaultSpeeds.horse,
+            wagon: settings.wagon_speed || this.defaultSpeeds.wagon
+        };
+        this.hoursPerDay = settings.hours_per_day || 8;
     },
 
     /**
