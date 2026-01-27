@@ -36,6 +36,60 @@ body {
     height: 100vh;
 }
 
+/* Selector Bar Styles */
+.selector-bar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 10px 20px;
+    background: var(--bg-dark);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.selector-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selector-group label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.selector-group select {
+    padding: 8px 12px;
+    min-width: 180px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-medium);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.selector-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.selector-group select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.selector-group .small-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.form-help {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+}
+
 /* Toolbar Styles */
 .toolbar {
     display: flex;

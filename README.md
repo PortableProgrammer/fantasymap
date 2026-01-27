@@ -4,6 +4,12 @@ An interactive map application for fantasy writers and worldbuilders. Create cus
 
 ## Features
 
+### Multiple Worlds & Maps
+- Organize your worldbuilding with **multiple worlds**
+- Each world can have **multiple maps** (regional, city, dungeon, etc.)
+- **SQLite database** stores everything - access from any machine
+- Export/import worlds as JSON files
+
 ### Interactive Map
 - **Pan and zoom** your custom map images (like Google Maps)
 - **Upload any image** as your map background
@@ -16,7 +22,7 @@ An interactive map application for fantasy writers and worldbuilders. Create cus
   - Dungeons & POI (temples, towers, mines, treasure)
   - Markers (stars, flags, quest markers)
   - Travel (waypoints, inns, stables, bridges)
-- **Create custom stamps** with any emoji
+- **Create custom stamps** with any emoji (saved per-world)
 - **Drag markers** to reposition them
 - Click markers to view/edit details
 
@@ -27,7 +33,7 @@ An interactive map application for fantasy writers and worldbuilders. Create cus
   - Horse (default: 8 mph)
   - Wagon (default: 4 mph)
 - **Route planning** - click multiple waypoints to plan a journey
-- Customizable travel speeds
+- Customizable travel speeds (saved per-world)
 - Results shown in days and hours
 
 ### Wiki Integration
@@ -40,20 +46,41 @@ An interactive map application for fantasy writers and worldbuilders. Create cus
   - Campfire
   - Any wiki system
 
-### Save/Load Projects
-- **Auto-saves** to browser storage
-- **Export/Import** as JSON files
-- Share projects between devices
-- Backup your worldbuilding work
-
 ## Getting Started
 
-1. **Open** `index.html` in your web browser
-2. **Upload** your fantasy map image using the "Upload Map" button
-3. **Set the scale** at the bottom of the screen (e.g., "0.5 miles per pixel")
-4. **Select a stamp** from the left sidebar
-5. **Click on the map** to place markers
-6. **Edit markers** by clicking on them
+### 1. Start the Server
+
+```bash
+cd server
+npm install
+npm start
+```
+
+The server will start at http://localhost:3000
+
+### 2. Open the Application
+
+Open your browser to http://localhost:3000
+
+### 3. Create Your First World
+
+1. Click the **+** button next to the World dropdown
+2. Enter a name and description for your world
+3. Click **Save**
+
+### 4. Add a Map
+
+1. Select your world from the dropdown
+2. Click the **+** button next to the Map dropdown
+3. Enter a map name and upload an image
+4. Click **Save**
+
+### 5. Start Mapping!
+
+1. **Set the scale** at the bottom of the screen (e.g., "0.5 miles per pixel")
+2. **Select a stamp** from the left sidebar
+3. **Click on the map** to place markers
+4. **Edit markers** by clicking on them
 
 ## Tools
 
@@ -64,33 +91,49 @@ An interactive map application for fantasy writers and worldbuilders. Create cus
 | 📏 Measure | Measure distance between two points |
 | 🛤️ Route | Plan a multi-point route |
 
-## Keyboard Shortcuts
+## Database
 
-- **Scroll wheel**: Zoom in/out
-- **Click + drag**: Pan the map
-- **Click marker**: Select and view details
+All data is stored in a SQLite database file (`server/fantasymap.db`). This includes:
+- Worlds and their settings
+- Maps and their images
+- All location markers
+- Custom stamps
+- Travel speed settings
 
-## Setting the Map Scale
+### Backup
 
-For accurate travel times, set your map scale:
+To backup your data, simply copy the `server/fantasymap.db` file.
 
-1. Determine the real-world distance represented by your map
-2. Adjust the "Map Scale" settings at the bottom of the screen
-3. Enter how many miles/km/leagues each pixel represents
+### Multi-Machine Access
 
-**Tip**: If your 1000-pixel-wide map represents 500 miles, the scale is 0.5 miles per pixel.
+To use from multiple machines:
+1. Run the server on a machine accessible on your network
+2. Access via `http://<server-ip>:3000`
 
-## Customizing Travel Speeds
+Or deploy to a cloud server (VPS, etc.) for anywhere access.
 
-The default travel speeds are based on historical averages:
+## API Reference
 
-| Mode | Default Speed | Notes |
-|------|---------------|-------|
-| Walking | 3 mph | Average hiking pace |
-| Horse | 8 mph | Sustainable travel pace |
-| Wagon | 4 mph | Loaded cart on roads |
+The server provides a REST API:
 
-Adjust these in the travel calculator based on your world's conditions (terrain, magic, etc.).
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/worlds` | GET | List all worlds |
+| `/api/worlds` | POST | Create a world |
+| `/api/worlds/:id` | GET | Get a world |
+| `/api/worlds/:id` | PUT | Update a world |
+| `/api/worlds/:id` | DELETE | Delete a world |
+| `/api/worlds/:id/maps` | GET | List maps in a world |
+| `/api/worlds/:id/maps` | POST | Create a map |
+| `/api/maps/:id` | GET | Get a map |
+| `/api/maps/:id` | PUT | Update a map |
+| `/api/maps/:id` | DELETE | Delete a map |
+| `/api/maps/:id/locations` | GET | List locations on a map |
+| `/api/maps/:id/locations` | POST | Create a location |
+| `/api/locations/:id` | PUT | Update a location |
+| `/api/locations/:id` | DELETE | Delete a location |
+| `/api/worlds/:id/export` | GET | Export world as JSON |
+| `/api/import` | POST | Import a world from JSON |
 
 ## File Structure
 
@@ -100,31 +143,44 @@ fantasymap/
 ├── css/
 │   └── styles.css      # All styles
 ├── js/
+│   ├── api.js          # API client
 │   ├── app.js          # Main application logic
 │   ├── map.js          # Leaflet map handling
 │   ├── markers.js      # Location marker management
 │   ├── stamps.js       # Stamp definitions
-│   ├── storage.js      # Save/load functionality
+│   ├── storage.js      # Legacy storage (for export)
 │   └── travel.js       # Travel time calculator
-└── assets/
-    └── stamps/         # (Optional) Custom stamp images
+└── server/
+    ├── package.json    # Node.js dependencies
+    ├── index.js        # Express server
+    ├── database.js     # SQLite database module
+    └── fantasymap.db   # Database file (created on first run)
 ```
 
-## Browser Support
+## Configuration
 
-Works in all modern browsers:
-- Chrome
-- Firefox
-- Safari
-- Edge
+### Server Port
+
+Set the `PORT` environment variable:
+```bash
+PORT=8080 npm start
+```
+
+### Database Location
+
+Set the `DB_PATH` environment variable:
+```bash
+DB_PATH=/path/to/fantasymap.db npm start
+```
 
 ## Tips for Worldbuilders
 
-1. **Start with a rough map** - you can always replace it later
-2. **Use consistent naming** - helps with wiki linking
-3. **Add notes** - future you will thank present you
-4. **Export regularly** - keep backups of your project
-5. **Use route planning** - visualize your characters' journeys
+1. **Organize by world** - Keep different story settings separate
+2. **Multiple maps per world** - Regional overview + detailed city maps
+3. **Use consistent naming** - Helps with wiki linking
+4. **Add notes** - Future you will thank present you
+5. **Export regularly** - Keep JSON backups of your worlds
+6. **Use route planning** - Visualize your characters' journeys
 
 ## License
 

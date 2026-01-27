@@ -84,12 +84,51 @@ const StampManager = {
      * Initialize stamp manager
      */
     init() {
-        // Load custom stamps from storage
-        const savedStamps = localStorage.getItem('fantasymap_stamps');
-        if (savedStamps) {
-            this.stamps = JSON.parse(savedStamps);
+        // Start with default stamps (custom stamps loaded from API per-world)
+        this.stamps = JSON.parse(JSON.stringify(this.defaultStamps));
+    },
+
+    /**
+     * Load custom stamps from API response
+     */
+    loadCustomStamps(customStamps) {
+        // Reset to defaults first
+        this.stamps = JSON.parse(JSON.stringify(this.defaultStamps));
+
+        // Add custom stamps from API
+        for (const stamp of customStamps) {
+            const category = stamp.category || 'custom';
+            const stampData = {
+                id: stamp.id,
+                icon: stamp.icon,
+                name: stamp.name,
+                custom: true
+            };
+
+            if (this.stamps[category]) {
+                this.stamps[category].stamps.push(stampData);
+            } else {
+                this.stamps.custom.stamps.push(stampData);
+            }
+        }
+    },
+
+    /**
+     * Add a custom stamp from API response
+     */
+    addCustomStampFromAPI(stamp) {
+        const category = stamp.category || 'custom';
+        const stampData = {
+            id: stamp.id,
+            icon: stamp.icon,
+            name: stamp.name,
+            custom: true
+        };
+
+        if (this.stamps[category]) {
+            this.stamps[category].stamps.push(stampData);
         } else {
-            this.stamps = JSON.parse(JSON.stringify(this.defaultStamps));
+            this.stamps.custom.stamps.push(stampData);
         }
     },
 
