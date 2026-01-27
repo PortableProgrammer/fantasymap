@@ -33,6 +33,10 @@
                 <button id="btn-new-map" class="small-btn" title="Create New Map" disabled>+</button>
                 <button id="btn-edit-map" class="small-btn" title="Edit Map" disabled>Edit</button>
             </div>
+            <div class="selector-group user-info" id="user-info">
+                <span id="user-display-name"></span>
+                <button id="btn-logout" class="small-btn" title="Logout">Logout</button>
+            </div>
         </div>
 
         <!-- Top Toolbar -->
@@ -292,6 +296,38 @@
                 <div class="modal-footer">
                     <button id="btn-delete-map" class="btn-danger" style="display: none;">Delete Map</button>
                     <button id="btn-save-map" class="btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login/Setup Modal -->
+        <div class="modal" id="modal-auth" style="display: none;">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2 id="modal-auth-title">Login</h2>
+                </div>
+                <div class="modal-body">
+                    <p id="auth-message" class="modal-description"></p>
+                    <div class="form-group">
+                        <label for="auth-username">Username</label>
+                        <input type="text" id="auth-username" placeholder="Enter username" autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="auth-password">Password</label>
+                        <input type="password" id="auth-password" placeholder="Enter password" autocomplete="current-password">
+                    </div>
+                    <div class="form-group" id="auth-confirm-group" style="display: none;">
+                        <label for="auth-password-confirm">Confirm Password</label>
+                        <input type="password" id="auth-password-confirm" placeholder="Confirm password" autocomplete="new-password">
+                    </div>
+                    <div class="form-group" id="auth-display-name-group" style="display: none;">
+                        <label for="auth-display-name">Display Name (optional)</label>
+                        <input type="text" id="auth-display-name" placeholder="Your display name">
+                    </div>
+                    <p id="auth-error" class="form-error"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-auth-submit" class="btn-primary">Login</button>
                 </div>
             </div>
         </div>

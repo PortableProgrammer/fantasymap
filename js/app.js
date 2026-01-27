@@ -9,6 +9,8 @@ const App = {
     selectedStamp: null,
     currentWorld: null,
     currentMap: null,
+    currentUser: null,
+    isSetupMode: false,
 
     // UI Elements
     elements: {},
@@ -23,6 +25,25 @@ const App = {
         // Cache DOM elements
         this.cacheElements();
 
+        // Setup API auth error handler
+        API.onAuthError = () => this.showAuthModal(false);
+
+        // Check authentication status first
+        const authStatus = await this.checkAuth();
+        if (!authStatus.authenticated) {
+            // Show login or setup modal
+            this.showAuthModal(authStatus.needsSetup);
+            return; // Don't initialize rest of app until authenticated
+        }
+
+        // User is authenticated, continue initialization
+        this.initializeApp();
+    },
+
+    /**
+     * Initialize the app after authentication
+     */
+    initializeApp() {
         // Initialize modules (without loading from localStorage)
         StampManager.init();
         TravelCalculator.init();
@@ -36,6 +57,7 @@ const App = {
         this.setupMapInteraction();
         this.setupFileHandlers();
         this.setupWorldMapSelectors();
+        this.setupAuth();
 
         // Setup marker callbacks
         MarkersModule.onLocationSelect = (location) => this.showLocationDetails(location);
@@ -45,9 +67,145 @@ const App = {
         this.renderStampPalette();
 
         // Load worlds from database
-        await this.loadWorlds();
+        this.loadWorlds();
+
+        // Update user info display
+        this.updateUserDisplay();
 
         console.log('Fantasy Map Builder initialized with database backend');
+    },
+
+    /**
+     * Check authentication status
+     */
+    async checkAuth() {
+        try {
+            const status = await API.getAuthStatus();
+            this.currentUser = status.user;
+            return status;
+        } catch (err) {
+            console.error('Auth check failed:', err);
+            return { authenticated: false, needsSetup: true };
+        }
+    },
+
+    /**
+     * Show authentication modal
+     */
+    showAuthModal(isSetup) {
+        this.isSetupMode = isSetup;
+        const modal = this.elements.modalAuth;
+        const title = document.getElementById('modal-auth-title');
+        const message = document.getElementById('auth-message');
+        const confirmGroup = document.getElementById('auth-confirm-group');
+        const displayNameGroup = document.getElementById('auth-display-name-group');
+        const submitBtn = document.getElementById('btn-auth-submit');
+        const errorEl = document.getElementById('auth-error');
+
+        // Clear form
+        document.getElementById('auth-username').value = '';
+        document.getElementById('auth-password').value = '';
+        document.getElementById('auth-password-confirm').value = '';
+        document.getElementById('auth-display-name').value = '';
+        errorEl.textContent = '';
+
+        if (isSetup) {
+            title.textContent = 'Create Admin Account';
+            message.textContent = 'Welcome! Create your admin account to get started.';
+            confirmGroup.style.display = 'block';
+            displayNameGroup.style.display = 'block';
+            submitBtn.textContent = 'Create Account';
+        } else {
+            title.textContent = 'Login';
+            message.textContent = 'Please log in to continue.';
+            confirmGroup.style.display = 'none';
+            displayNameGroup.style.display = 'none';
+            submitBtn.textContent = 'Login';
+        }
+
+        modal.style.display = 'flex';
+    },
+
+    /**
+     * Handle auth form submission
+     */
+    async handleAuthSubmit() {
+        const username = document.getElementById('auth-username').value.trim();
+        const password = document.getElementById('auth-password').value;
+        const errorEl = document.getElementById('auth-error');
+
+        errorEl.textContent = '';
+
+        if (!username || !password) {
+            errorEl.textContent = 'Please enter username and password';
+            return;
+        }
+
+        try {
+            if (this.isSetupMode) {
+                // Registration
+                const confirmPassword = document.getElementById('auth-password-confirm').value;
+                const displayName = document.getElementById('auth-display-name').value.trim();
+
+                if (password !== confirmPassword) {
+                    errorEl.textContent = 'Passwords do not match';
+                    return;
+                }
+
+                if (password.length < 6) {
+                    errorEl.textContent = 'Password must be at least 6 characters';
+                    return;
+                }
+
+                const result = await API.register(username, password, displayName || username);
+                this.currentUser = result.user;
+            } else {
+                // Login
+                const result = await API.login(username, password);
+                this.currentUser = result.user;
+            }
+
+            // Close modal and initialize app
+            this.elements.modalAuth.style.display = 'none';
+            this.initializeApp();
+
+        } catch (err) {
+            errorEl.textContent = err.message;
+        }
+    },
+
+    /**
+     * Handle logout
+     */
+    async handleLogout() {
+        try {
+            await API.logout();
+            this.currentUser = null;
+            // Reload page to reset state
+            window.location.reload();
+        } catch (err) {
+            this.showNotification('Logout failed: ' + err.message, 'error');
+        }
+    },
+
+    /**
+     * Update user display in toolbar
+     */
+    updateUserDisplay() {
+        const displayName = document.getElementById('user-display-name');
+        if (this.currentUser) {
+            displayName.textContent = this.currentUser.display_name || this.currentUser.username;
+        }
+    },
+
+    /**
+     * Setup auth-related event listeners
+     */
+    setupAuth() {
+        // Logout button
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            this.handleLogout();
+        });
     },
 
     /**
@@ -90,6 +248,7 @@ const App = {
             modalTravelSettings: document.getElementById('modal-travel-settings'),
             modalWorld: document.getElementById('modal-world'),
             modalMap: document.getElementById('modal-map'),
+            modalAuth: document.getElementById('modal-auth'),
 
             // File inputs
             fileMapUpload: document.getElementById('file-map-upload'),
@@ -356,6 +515,23 @@ const App = {
      * Setup modal event listeners
      */
     setupModals() {
+        // Auth modal
+        document.getElementById('btn-auth-submit').addEventListener('click', () => {
+            this.handleAuthSubmit();
+        });
+
+        // Allow Enter key to submit auth form
+        ['auth-username', 'auth-password', 'auth-password-confirm'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.handleAuthSubmit();
+                    }
+                });
+            }
+        });
+
         // Location modal
         document.getElementById('btn-modal-close').addEventListener('click', () => {
             this.hideModal('modalLocation');

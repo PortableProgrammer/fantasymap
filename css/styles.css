@@ -90,6 +90,30 @@ body {
     margin-top: 6px;
 }
 
+.form-error {
+    font-size: 0.85rem;
+    color: var(--danger);
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 4px;
+    display: none;
+}
+
+.form-error:not(:empty) {
+    display: block;
+}
+
+/* User Info */
+.user-info {
+    margin-left: auto;
+}
+
+.user-info #user-display-name {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
 /* Toolbar Styles */
 .toolbar {
     display: flex;

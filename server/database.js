@@ -6,6 +6,10 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcrypt');
+
+// Password hashing rounds
+const SALT_ROUNDS = 10;
 
 // Database file path
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'fantasymap.db');
@@ -19,6 +23,16 @@ db.pragma('journal_mode = WAL');
  */
 function initSchema() {
     db.exec(`
+        -- Users table
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            display_name TEXT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+        );
+
         -- Worlds table (container for multiple maps)
         CREATE TABLE IF NOT EXISTS worlds (
             id TEXT PRIMARY KEY,
@@ -358,8 +372,117 @@ const TravelSettingsDB = {
     }
 };
 
+/**
+ * User operations
+ */
+const UsersDB = {
+    /**
+     * Check if any users exist
+     */
+    hasUsers() {
+        const result = db.prepare('SELECT COUNT(*) as count FROM users').get();
+        return result.count > 0;
+    },
+
+    /**
+     * Get user by ID (without password hash)
+     */
+    getById(id) {
+        const user = db.prepare('SELECT id, username, display_name, created_at, updated_at FROM users WHERE id = ?').get(id);
+        return user || null;
+    },
+
+    /**
+     * Get user by username (with password hash for authentication)
+     */
+    getByUsername(username) {
+        return db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    },
+
+    /**
+     * Create a new user
+     */
+    async create(data) {
+        const id = uuidv4();
+        const now = Date.now();
+        const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
+
+        try {
+            db.prepare(`
+                INSERT INTO users (id, username, password_hash, display_name, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `).run(id, data.username, passwordHash, data.display_name || data.username, now, now);
+            return this.getById(id);
+        } catch (err) {
+            if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+                throw new Error('Username already exists');
+            }
+            throw err;
+        }
+    },
+
+    /**
+     * Verify password for a user
+     */
+    async verifyPassword(username, password) {
+        const user = this.getByUsername(username);
+        if (!user) {
+            return null;
+        }
+
+        const valid = await bcrypt.compare(password, user.password_hash);
+        if (!valid) {
+            return null;
+        }
+
+        // Return user without password hash
+        return {
+            id: user.id,
+            username: user.username,
+            display_name: user.display_name,
+            created_at: user.created_at,
+            updated_at: user.updated_at
+        };
+    },
+
+    /**
+     * Update user password
+     */
+    async updatePassword(id, newPassword) {
+        const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+        const now = Date.now();
+        db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?').run(passwordHash, now, id);
+        return this.getById(id);
+    },
+
+    /**
+     * Update user display name
+     */
+    updateDisplayName(id, displayName) {
+        const now = Date.now();
+        db.prepare('UPDATE users SET display_name = ?, updated_at = ? WHERE id = ?').run(displayName, now, id);
+        return this.getById(id);
+    },
+
+    /**
+     * Get all users (without password hashes)
+     */
+    getAll() {
+        return db.prepare('SELECT id, username, display_name, created_at, updated_at FROM users ORDER BY created_at ASC').all();
+    },
+
+    /**
+     * Delete a user
+     */
+    delete(id) {
+        db.prepare('DELETE FROM users WHERE id = ?').run(id);
+        return { success: true };
+    }
+};
+
 module.exports = {
     db,
+    UsersDB,
     WorldsDB,
     MapsDB,
     LocationsDB,
