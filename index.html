@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Map Builder</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Toolbar -->
+        <header class="toolbar">
+            <div class="toolbar-left">
+                <h1>Fantasy Map Builder</h1>
+            </div>
+            <div class="toolbar-center">
+                <button id="btn-select" class="tool-btn active" title="Select/Pan">
+                    <span class="icon">✋</span>
+                </button>
+                <button id="btn-stamp" class="tool-btn" title="Place Stamp">
+                    <span class="icon">📍</span>
+                </button>
+                <button id="btn-measure" class="tool-btn" title="Measure Distance">
+                    <span class="icon">📏</span>
+                </button>
+                <button id="btn-route" class="tool-btn" title="Plan Route">
+                    <span class="icon">🛤️</span>
+                </button>
+            </div>
+            <div class="toolbar-right">
+                <button id="btn-upload-map" class="action-btn" title="Upload Map Image">
+                    Upload Map
+                </button>
+                <button id="btn-save" class="action-btn" title="Save Project">
+                    Save
+                </button>
+                <button id="btn-load" class="action-btn" title="Load Project">
+                    Load
+                </button>
+                <button id="btn-export" class="action-btn" title="Export Data">
+                    Export
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Left Sidebar - Stamps -->
+            <aside class="sidebar sidebar-left">
+                <div class="sidebar-header">
+                    <h2>Stamps</h2>
+                    <button id="btn-add-stamp-type" class="small-btn" title="Add Custom Stamp">+</button>
+                </div>
+                <div class="stamp-palette" id="stamp-palette">
+                    <!-- Stamp categories will be populated by JS -->
+                </div>
+            </aside>
+
+            <!-- Map Container -->
+            <div class="map-wrapper">
+                <div id="map"></div>
+
+                <!-- Scale Settings Overlay -->
+                <div class="scale-overlay" id="scale-overlay">
+                    <div class="scale-info">
+                        <span>Map Scale:</span>
+                        <input type="number" id="scale-value" value="1" min="0.1" step="0.1">
+                        <select id="scale-unit">
+                            <option value="miles">miles</option>
+                            <option value="km">kilometers</option>
+                            <option value="leagues">leagues</option>
+                        </select>
+                        <span>per pixel</span>
+                        <button id="btn-set-scale" class="small-btn">Set Scale</button>
+                    </div>
+                </div>
+
+                <!-- Travel Calculator Overlay -->
+                <div class="travel-overlay" id="travel-overlay" style="display: none;">
+                    <div class="travel-info">
+                        <h3>Travel Time Calculator</h3>
+                        <div class="travel-distance">
+                            Distance: <span id="travel-distance-value">0</span> <span id="travel-distance-unit">miles</span>
+                        </div>
+                        <div class="travel-times">
+                            <div class="travel-mode">
+                                <span class="mode-icon">🚶</span>
+                                <span class="mode-name">Walking</span>
+                                <span class="mode-time" id="time-walking">-</span>
+                            </div>
+                            <div class="travel-mode">
+                                <span class="mode-icon">🐎</span>
+                                <span class="mode-name">Horse</span>
+                                <span class="mode-time" id="time-horse">-</span>
+                            </div>
+                            <div class="travel-mode">
+                                <span class="mode-icon">🛒</span>
+                                <span class="mode-name">Wagon</span>
+                                <span class="mode-time" id="time-wagon">-</span>
+                            </div>
+                        </div>
+                        <button id="btn-close-travel" class="small-btn">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Location Details -->
+            <aside class="sidebar sidebar-right" id="sidebar-right">
+                <div class="sidebar-header">
+                    <h2>Location Details</h2>
+                    <button id="btn-close-details" class="small-btn">×</button>
+                </div>
+                <div class="location-details" id="location-details">
+                    <p class="placeholder-text">Click on a marker to view details</p>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Location Edit Modal -->
+        <div class="modal" id="modal-location" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Edit Location</h2>
+                    <button class="modal-close" id="btn-modal-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="location-name">Name</label>
+                        <input type="text" id="location-name" placeholder="Location name">
+                    </div>
+                    <div class="form-group">
+                        <label for="location-description">Description</label>
+                        <textarea id="location-description" rows="4" placeholder="Describe this location..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="location-wiki">Wiki Link</label>
+                        <input type="url" id="location-wiki" placeholder="https://your-wiki.com/page">
+                    </div>
+                    <div class="form-group">
+                        <label>Stamp Icon</label>
+                        <div class="stamp-selector" id="stamp-selector">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="location-notes">Notes</label>
+                        <textarea id="location-notes" rows="3" placeholder="Additional notes..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-delete-location" class="btn-danger">Delete</button>
+                    <button id="btn-save-location" class="btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Stamp Modal -->
+        <div class="modal" id="modal-custom-stamp" style="display: none;">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2>Add Custom Stamp</h2>
+                    <button class="modal-close" id="btn-stamp-modal-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="stamp-emoji">Emoji or Symbol</label>
+                        <input type="text" id="stamp-emoji" placeholder="🏰" maxlength="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="stamp-name">Stamp Name</label>
+                        <input type="text" id="stamp-name" placeholder="Castle">
+                    </div>
+                    <div class="form-group">
+                        <label for="stamp-category">Category</label>
+                        <select id="stamp-category">
+                            <option value="settlements">Settlements</option>
+                            <option value="nature">Nature</option>
+                            <option value="dungeons">Dungeons</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-add-custom-stamp" class="btn-primary">Add Stamp</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Travel Speed Settings Modal -->
+        <div class="modal" id="modal-travel-settings" style="display: none;">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2>Travel Speed Settings</h2>
+                    <button class="modal-close" id="btn-travel-modal-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">Set travel speeds (in miles per hour)</p>
+                    <div class="form-group">
+                        <label for="speed-walking">🚶 Walking Speed</label>
+                        <input type="number" id="speed-walking" value="3" min="0.5" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="speed-horse">🐎 Horse Speed</label>
+                        <input type="number" id="speed-horse" value="8" min="1" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="speed-wagon">🛒 Wagon Speed</label>
+                        <input type="number" id="speed-wagon" value="4" min="0.5" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="hours-per-day">Hours of Travel per Day</label>
+                        <input type="number" id="hours-per-day" value="8" min="1" max="24" step="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-save-travel-settings" class="btn-primary">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Input (hidden) -->
+        <input type="file" id="file-map-upload" accept="image/*" style="display: none;">
+        <input type="file" id="file-load-project" accept=".json" style="display: none;">
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <!-- App Scripts -->
+    <script src="js/stamps.js"></script>
+    <script src="js/travel.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/markers.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

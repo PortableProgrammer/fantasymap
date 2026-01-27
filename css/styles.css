@@ -1,0 +1,805 @@
+/* Fantasy Map Builder - Styles */
+
+:root {
+    --bg-dark: #1a1a2e;
+    --bg-medium: #16213e;
+    --bg-light: #0f3460;
+    --accent: #e94560;
+    --accent-hover: #ff6b6b;
+    --text-primary: #eaeaea;
+    --text-secondary: #a0a0a0;
+    --border-color: #2a2a4a;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --danger: #ef4444;
+    --sidebar-width: 280px;
+    --toolbar-height: 60px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Toolbar Styles */
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--toolbar-height);
+    background: var(--bg-medium);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 20px;
+    z-index: 1000;
+}
+
+.toolbar h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.toolbar-center {
+    display: flex;
+    gap: 8px;
+}
+
+.toolbar-right {
+    display: flex;
+    gap: 10px;
+}
+
+.tool-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tool-btn:hover {
+    border-color: var(--accent);
+    background: var(--bg-light);
+}
+
+.tool-btn.active {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: white;
+}
+
+.tool-btn .icon {
+    font-size: 1.3rem;
+}
+
+.action-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    background: var(--bg-light);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--accent);
+}
+
+.small-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    background: var(--bg-light);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.small-btn:hover {
+    background: var(--accent);
+}
+
+/* Main Content Layout */
+.main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-medium);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sidebar-right {
+    border-right: none;
+    border-left: 1px solid var(--border-color);
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Stamp Palette */
+.stamp-palette {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.stamp-category {
+    margin-bottom: 16px;
+}
+
+.stamp-category-header {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.stamp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.stamp-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: var(--bg-dark);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stamp-item:hover {
+    border-color: var(--accent);
+    transform: scale(1.05);
+}
+
+.stamp-item.selected {
+    border-color: var(--accent);
+    background: var(--bg-light);
+}
+
+.stamp-icon {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+}
+
+.stamp-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Map Container */
+.map-wrapper {
+    flex: 1;
+    position: relative;
+    background: var(--bg-dark);
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    background: #1a1a1a;
+}
+
+/* Override Leaflet styles for dark theme */
+.leaflet-container {
+    background: #1a1a1a;
+    font-family: inherit;
+}
+
+.leaflet-control-zoom {
+    border: none !important;
+}
+
+.leaflet-control-zoom a {
+    background: var(--bg-medium) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: var(--bg-light) !important;
+}
+
+.leaflet-popup-content-wrapper {
+    background: var(--bg-medium);
+    color: var(--text-primary);
+    border-radius: 8px;
+}
+
+.leaflet-popup-tip {
+    background: var(--bg-medium);
+}
+
+.leaflet-popup-close-button {
+    color: var(--text-secondary) !important;
+}
+
+/* Custom Marker Styles */
+.custom-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.custom-marker:hover {
+    transform: scale(1.2);
+}
+
+.custom-marker.selected {
+    filter: drop-shadow(0 0 8px var(--accent));
+}
+
+/* Scale Overlay */
+.scale-overlay {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+.scale-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--bg-medium);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.scale-info input[type="number"] {
+    width: 70px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.scale-info select {
+    padding: 6px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+/* Travel Overlay */
+.travel-overlay {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+.travel-info {
+    padding: 16px 20px;
+    background: var(--bg-medium);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    min-width: 300px;
+}
+
+.travel-info h3 {
+    margin-bottom: 12px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.travel-distance {
+    text-align: center;
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.travel-times {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.travel-mode {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: var(--bg-dark);
+    border-radius: 6px;
+}
+
+.travel-mode .mode-icon {
+    font-size: 1.3rem;
+}
+
+.travel-mode .mode-name {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.travel-mode .mode-time {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.travel-info .small-btn {
+    width: 100%;
+}
+
+/* Location Details */
+.location-details {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.location-details .placeholder-text {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+.location-card {
+    background: var(--bg-dark);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.location-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.location-card-icon {
+    font-size: 2rem;
+}
+
+.location-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.location-card-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.location-card-wiki {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--bg-light);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: background 0.2s ease;
+}
+
+.location-card-wiki:hover {
+    background: var(--accent);
+}
+
+.location-card-wiki .wiki-icon {
+    font-size: 1.1rem;
+}
+
+.location-card-notes {
+    padding: 12px;
+    background: var(--bg-medium);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.location-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.location-card-actions button {
+    flex: 1;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: var(--bg-medium);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-small {
+    max-width: 400px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.modal-close:hover {
+    background: var(--danger);
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.modal-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Stamp Selector in Modal */
+.stamp-selector {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 8px;
+    background: var(--bg-dark);
+    border-radius: 6px;
+}
+
+.stamp-selector .stamp-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stamp-selector .stamp-option:hover {
+    border-color: var(--accent);
+    background: var(--bg-light);
+}
+
+.stamp-selector .stamp-option.selected {
+    border-color: var(--accent);
+    background: var(--bg-light);
+}
+
+/* Buttons */
+.btn-primary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    background: var(--accent);
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+.btn-danger {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    background: var(--danger);
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.btn-danger:hover {
+    opacity: 0.9;
+}
+
+/* Measurement line */
+.measurement-line {
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-dasharray: 10, 5;
+}
+
+/* Route line */
+.route-line {
+    stroke: var(--success);
+    stroke-width: 4;
+}
+
+/* Custom Leaflet marker styles */
+.leaflet-div-icon {
+    background: transparent;
+    border: none;
+}
+
+/* Loading overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Empty state for map */
+.map-empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: var(--text-secondary);
+    z-index: 500;
+}
+
+.map-empty-state .icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.map-empty-state p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--bg-light);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .sidebar {
+        width: 240px;
+    }
+}
+
+@media (max-width: 900px) {
+    .sidebar-left {
+        width: 200px;
+    }
+
+    .sidebar-right {
+        position: absolute;
+        right: 0;
+        top: var(--toolbar-height);
+        height: calc(100vh - var(--toolbar-height));
+        width: 300px;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        z-index: 900;
+    }
+
+    .sidebar-right.open {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .toolbar {
+        padding: 0 10px;
+    }
+
+    .toolbar h1 {
+        font-size: 1rem;
+    }
+
+    .toolbar-right .action-btn {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .sidebar-left {
+        position: absolute;
+        left: 0;
+        top: var(--toolbar-height);
+        height: calc(100vh - var(--toolbar-height));
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 900;
+    }
+
+    .sidebar-left.open {
+        transform: translateX(0);
+    }
+}
