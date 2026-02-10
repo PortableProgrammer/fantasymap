@@ -234,9 +234,16 @@ const App = {
             btnExport: document.getElementById('btn-export'),
 
             // Sidebars
-            stampPalette: document.getElementById('stamp-palette'),
+            sidebarLeft: document.getElementById('sidebar-left'),
             sidebarRight: document.getElementById('sidebar-right'),
+            stampPalette: document.getElementById('stamp-palette'),
             locationDetails: document.getElementById('location-details'),
+
+            // Sidebar controls
+            btnCollapseLeft: document.getElementById('btn-collapse-left'),
+            btnCollapseRight: document.getElementById('btn-collapse-right'),
+            btnToggleLeft: document.getElementById('btn-toggle-left'),
+            btnToggleRight: document.getElementById('btn-toggle-right'),
 
             // Overlays
             scaleOverlay: document.getElementById('scale-overlay'),
@@ -499,16 +506,78 @@ const App = {
             this.showModal('modalCustomStamp');
         });
 
-        // Close details button
-        document.getElementById('btn-close-details').addEventListener('click', () => {
-            this.hideLocationDetails();
-        });
-
         // Close travel overlay
         document.getElementById('btn-close-travel').addEventListener('click', () => {
             MapModule.clearMeasurement();
             MapModule.clearRoute();
         });
+
+        // Sidebar collapse/expand functionality
+        this.elements.btnCollapseLeft?.addEventListener('click', () => {
+            this.toggleSidebar('left', false);
+        });
+
+        this.elements.btnCollapseRight?.addEventListener('click', () => {
+            this.toggleSidebar('right', false);
+        });
+
+        this.elements.btnToggleLeft?.addEventListener('click', () => {
+            this.toggleSidebar('left', true);
+        });
+
+        this.elements.btnToggleRight?.addEventListener('click', () => {
+            this.toggleSidebar('right', true);
+        });
+
+        // Load sidebar state from localStorage
+        this.loadSidebarState();
+    },
+
+    /**
+     * Toggle sidebar visibility
+     */
+    toggleSidebar(side, show) {
+        const sidebar = side === 'left' ? this.elements.sidebarLeft : this.elements.sidebarRight;
+        const toggle = side === 'left' ? this.elements.btnToggleLeft : this.elements.btnToggleRight;
+
+        if (show) {
+            sidebar.classList.remove('collapsed');
+            toggle.classList.remove('visible');
+        } else {
+            sidebar.classList.add('collapsed');
+            toggle.classList.add('visible');
+        }
+
+        // Save state
+        this.saveSidebarState();
+    },
+
+    /**
+     * Save sidebar state to localStorage
+     */
+    saveSidebarState() {
+        const state = {
+            leftCollapsed: this.elements.sidebarLeft?.classList.contains('collapsed'),
+            rightCollapsed: this.elements.sidebarRight?.classList.contains('collapsed')
+        };
+        localStorage.setItem('fantasymap_sidebar_state', JSON.stringify(state));
+    },
+
+    /**
+     * Load sidebar state from localStorage
+     */
+    loadSidebarState() {
+        try {
+            const state = JSON.parse(localStorage.getItem('fantasymap_sidebar_state') || '{}');
+            if (state.leftCollapsed) {
+                this.toggleSidebar('left', false);
+            }
+            if (state.rightCollapsed) {
+                this.toggleSidebar('right', false);
+            }
+        } catch (e) {
+            // Ignore errors
+        }
     },
 
     /**
@@ -1229,23 +1298,26 @@ const App = {
         notification.className = `notification notification-${type}`;
         notification.style.cssText = `
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            background: ${type === 'error' ? '#ef4444' : '#4ade80'};
-            color: ${type === 'error' ? 'white' : '#1a1a2e'};
-            border-radius: 8px;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 24px;
+            background: ${type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'rgba(16, 185, 129, 0.95)'};
+            color: white;
+            border-radius: 10px;
             font-size: 0.9rem;
+            font-weight: 500;
             z-index: 3000;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: notificationSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         `;
         notification.textContent = message;
 
         document.body.appendChild(notification);
 
         setTimeout(() => {
-            notification.style.animation = 'fadeOut 0.3s ease';
+            notification.style.animation = 'notificationFadeOut 0.3s ease forwards';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
     }
@@ -1254,13 +1326,25 @@ const App = {
 // Add CSS animation
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+    @keyframes notificationSlideIn {
+        from {
+            transform: translateX(100%) scale(0.8);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
     }
-    @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
+    @keyframes notificationFadeOut {
+        from {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(50%) scale(0.8);
+            opacity: 0;
+        }
     }
 `;
 document.head.appendChild(style);
