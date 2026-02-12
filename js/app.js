@@ -9,6 +9,8 @@ const App = {
     selectedStamp: null,
     currentWorld: null,
     currentMap: null,
+    currentUser: null,
+    isSetupMode: false,
 
     // UI Elements
     elements: {},
@@ -23,6 +25,25 @@ const App = {
         // Cache DOM elements
         this.cacheElements();
 
+        // Setup API auth error handler
+        API.onAuthError = () => this.showAuthModal(false);
+
+        // Check authentication status first
+        const authStatus = await this.checkAuth();
+        if (!authStatus.authenticated) {
+            // Show login or setup modal
+            this.showAuthModal(authStatus.needsSetup);
+            return; // Don't initialize rest of app until authenticated
+        }
+
+        // User is authenticated, continue initialization
+        this.initializeApp();
+    },
+
+    /**
+     * Initialize the app after authentication
+     */
+    initializeApp() {
         // Initialize modules (without loading from localStorage)
         StampManager.init();
         TravelCalculator.init();
@@ -36,6 +57,7 @@ const App = {
         this.setupMapInteraction();
         this.setupFileHandlers();
         this.setupWorldMapSelectors();
+        this.setupAuth();
 
         // Setup marker callbacks
         MarkersModule.onLocationSelect = (location) => this.showLocationDetails(location);
@@ -45,9 +67,145 @@ const App = {
         this.renderStampPalette();
 
         // Load worlds from database
-        await this.loadWorlds();
+        this.loadWorlds();
+
+        // Update user info display
+        this.updateUserDisplay();
 
         console.log('Fantasy Map Builder initialized with database backend');
+    },
+
+    /**
+     * Check authentication status
+     */
+    async checkAuth() {
+        try {
+            const status = await API.getAuthStatus();
+            this.currentUser = status.user;
+            return status;
+        } catch (err) {
+            console.error('Auth check failed:', err);
+            return { authenticated: false, needsSetup: true };
+        }
+    },
+
+    /**
+     * Show authentication modal
+     */
+    showAuthModal(isSetup) {
+        this.isSetupMode = isSetup;
+        const modal = this.elements.modalAuth;
+        const title = document.getElementById('modal-auth-title');
+        const message = document.getElementById('auth-message');
+        const confirmGroup = document.getElementById('auth-confirm-group');
+        const displayNameGroup = document.getElementById('auth-display-name-group');
+        const submitBtn = document.getElementById('btn-auth-submit');
+        const errorEl = document.getElementById('auth-error');
+
+        // Clear form
+        document.getElementById('auth-username').value = '';
+        document.getElementById('auth-password').value = '';
+        document.getElementById('auth-password-confirm').value = '';
+        document.getElementById('auth-display-name').value = '';
+        errorEl.textContent = '';
+
+        if (isSetup) {
+            title.textContent = 'Create Admin Account';
+            message.textContent = 'Welcome! Create your admin account to get started.';
+            confirmGroup.style.display = 'block';
+            displayNameGroup.style.display = 'block';
+            submitBtn.textContent = 'Create Account';
+        } else {
+            title.textContent = 'Login';
+            message.textContent = 'Please log in to continue.';
+            confirmGroup.style.display = 'none';
+            displayNameGroup.style.display = 'none';
+            submitBtn.textContent = 'Login';
+        }
+
+        modal.style.display = 'flex';
+    },
+
+    /**
+     * Handle auth form submission
+     */
+    async handleAuthSubmit() {
+        const username = document.getElementById('auth-username').value.trim();
+        const password = document.getElementById('auth-password').value;
+        const errorEl = document.getElementById('auth-error');
+
+        errorEl.textContent = '';
+
+        if (!username || !password) {
+            errorEl.textContent = 'Please enter username and password';
+            return;
+        }
+
+        try {
+            if (this.isSetupMode) {
+                // Registration
+                const confirmPassword = document.getElementById('auth-password-confirm').value;
+                const displayName = document.getElementById('auth-display-name').value.trim();
+
+                if (password !== confirmPassword) {
+                    errorEl.textContent = 'Passwords do not match';
+                    return;
+                }
+
+                if (password.length < 6) {
+                    errorEl.textContent = 'Password must be at least 6 characters';
+                    return;
+                }
+
+                const result = await API.register(username, password, displayName || username);
+                this.currentUser = result.user;
+            } else {
+                // Login
+                const result = await API.login(username, password);
+                this.currentUser = result.user;
+            }
+
+            // Close modal and initialize app
+            this.elements.modalAuth.style.display = 'none';
+            this.initializeApp();
+
+        } catch (err) {
+            errorEl.textContent = err.message;
+        }
+    },
+
+    /**
+     * Handle logout
+     */
+    async handleLogout() {
+        try {
+            await API.logout();
+            this.currentUser = null;
+            // Reload page to reset state
+            window.location.reload();
+        } catch (err) {
+            this.showNotification('Logout failed: ' + err.message, 'error');
+        }
+    },
+
+    /**
+     * Update user display in toolbar
+     */
+    updateUserDisplay() {
+        const displayName = document.getElementById('user-display-name');
+        if (this.currentUser) {
+            displayName.textContent = this.currentUser.display_name || this.currentUser.username;
+        }
+    },
+
+    /**
+     * Setup auth-related event listeners
+     */
+    setupAuth() {
+        // Logout button
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            this.handleLogout();
+        });
     },
 
     /**
@@ -76,9 +234,16 @@ const App = {
             btnExport: document.getElementById('btn-export'),
 
             // Sidebars
-            stampPalette: document.getElementById('stamp-palette'),
+            sidebarLeft: document.getElementById('sidebar-left'),
             sidebarRight: document.getElementById('sidebar-right'),
+            stampPalette: document.getElementById('stamp-palette'),
             locationDetails: document.getElementById('location-details'),
+
+            // Sidebar controls
+            btnCollapseLeft: document.getElementById('btn-collapse-left'),
+            btnCollapseRight: document.getElementById('btn-collapse-right'),
+            btnToggleLeft: document.getElementById('btn-toggle-left'),
+            btnToggleRight: document.getElementById('btn-toggle-right'),
 
             // Overlays
             scaleOverlay: document.getElementById('scale-overlay'),
@@ -90,6 +255,7 @@ const App = {
             modalTravelSettings: document.getElementById('modal-travel-settings'),
             modalWorld: document.getElementById('modal-world'),
             modalMap: document.getElementById('modal-map'),
+            modalAuth: document.getElementById('modal-auth'),
 
             // File inputs
             fileMapUpload: document.getElementById('file-map-upload'),
@@ -340,22 +506,101 @@ const App = {
             this.showModal('modalCustomStamp');
         });
 
-        // Close details button
-        document.getElementById('btn-close-details').addEventListener('click', () => {
-            this.hideLocationDetails();
-        });
-
         // Close travel overlay
         document.getElementById('btn-close-travel').addEventListener('click', () => {
             MapModule.clearMeasurement();
             MapModule.clearRoute();
         });
+
+        // Sidebar collapse/expand functionality
+        this.elements.btnCollapseLeft?.addEventListener('click', () => {
+            this.toggleSidebar('left', false);
+        });
+
+        this.elements.btnCollapseRight?.addEventListener('click', () => {
+            this.toggleSidebar('right', false);
+        });
+
+        this.elements.btnToggleLeft?.addEventListener('click', () => {
+            this.toggleSidebar('left', true);
+        });
+
+        this.elements.btnToggleRight?.addEventListener('click', () => {
+            this.toggleSidebar('right', true);
+        });
+
+        // Load sidebar state from localStorage
+        this.loadSidebarState();
+    },
+
+    /**
+     * Toggle sidebar visibility
+     */
+    toggleSidebar(side, show) {
+        const sidebar = side === 'left' ? this.elements.sidebarLeft : this.elements.sidebarRight;
+        const toggle = side === 'left' ? this.elements.btnToggleLeft : this.elements.btnToggleRight;
+
+        if (show) {
+            sidebar.classList.remove('collapsed');
+            toggle.classList.remove('visible');
+        } else {
+            sidebar.classList.add('collapsed');
+            toggle.classList.add('visible');
+        }
+
+        // Save state
+        this.saveSidebarState();
+    },
+
+    /**
+     * Save sidebar state to localStorage
+     */
+    saveSidebarState() {
+        const state = {
+            leftCollapsed: this.elements.sidebarLeft?.classList.contains('collapsed'),
+            rightCollapsed: this.elements.sidebarRight?.classList.contains('collapsed')
+        };
+        localStorage.setItem('fantasymap_sidebar_state', JSON.stringify(state));
+    },
+
+    /**
+     * Load sidebar state from localStorage
+     */
+    loadSidebarState() {
+        try {
+            const state = JSON.parse(localStorage.getItem('fantasymap_sidebar_state') || '{}');
+            if (state.leftCollapsed) {
+                this.toggleSidebar('left', false);
+            }
+            if (state.rightCollapsed) {
+                this.toggleSidebar('right', false);
+            }
+        } catch (e) {
+            // Ignore errors
+        }
     },
 
     /**
      * Setup modal event listeners
      */
     setupModals() {
+        // Auth modal
+        document.getElementById('btn-auth-submit').addEventListener('click', () => {
+            this.handleAuthSubmit();
+        });
+
+        // Allow Enter key to submit auth form
+        ['auth-username', 'auth-password', 'auth-password-confirm'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.handleAuthSubmit();
+                    }
+                });
+            }
+        });
+
         // Location modal
         document.getElementById('btn-modal-close').addEventListener('click', () => {
             this.hideModal('modalLocation');
@@ -1053,23 +1298,26 @@ const App = {
         notification.className = `notification notification-${type}`;
         notification.style.cssText = `
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            background: ${type === 'error' ? '#ef4444' : '#4ade80'};
-            color: ${type === 'error' ? 'white' : '#1a1a2e'};
-            border-radius: 8px;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 24px;
+            background: ${type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'rgba(16, 185, 129, 0.95)'};
+            color: white;
+            border-radius: 10px;
             font-size: 0.9rem;
+            font-weight: 500;
             z-index: 3000;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: notificationSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         `;
         notification.textContent = message;
 
         document.body.appendChild(notification);
 
         setTimeout(() => {
-            notification.style.animation = 'fadeOut 0.3s ease';
+            notification.style.animation = 'notificationFadeOut 0.3s ease forwards';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
     }
@@ -1078,13 +1326,25 @@ const App = {
 // Add CSS animation
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+    @keyframes notificationSlideIn {
+        from {
+            transform: translateX(100%) scale(0.8);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
     }
-    @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
+    @keyframes notificationFadeOut {
+        from {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(50%) scale(0.8);
+            opacity: 0;
+        }
     }
 `;
 document.head.appendChild(style);

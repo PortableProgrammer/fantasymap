@@ -106,12 +106,27 @@ const MapModule = {
         const bounds = [[0, 0], [height, width]];
         this.mapBounds = L.latLngBounds(bounds);
 
-        // Add image overlay
-        this.imageOverlay = L.imageOverlay(imageUrl, bounds).addTo(this.map);
+        // Create image overlay but don't add to map yet (Safari fix)
+        // Safari has issues when image is added before fully loaded
+        // See: https://github.com/Leaflet/Leaflet/issues/6322
+        this.imageOverlay = L.imageOverlay(imageUrl, bounds);
 
-        // Fit map to image bounds
-        this.map.fitBounds(bounds);
-        this.map.setMaxBounds(bounds.map(([y, x]) => [y - height * 0.5, x - width * 0.5]));
+        // Wait for image to load before adding to map
+        this.imageOverlay.on('load', () => {
+            // Fit map to image bounds after image loads
+            this.map.fitBounds(bounds);
+
+            // Set max bounds with symmetric padding to allow panning beyond edges
+            const padding = 0.3; // 30% padding on all sides
+            const paddedBounds = [
+                [-height * padding, -width * padding],
+                [height * (1 + padding), width * (1 + padding)]
+            ];
+            this.map.setMaxBounds(paddedBounds);
+        });
+
+        // Add to map and trigger load
+        this.imageOverlay.addTo(this.map);
 
         this.hideEmptyState();
 

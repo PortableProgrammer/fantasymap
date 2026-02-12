@@ -7,6 +7,9 @@ const API = {
     // Base URL - change this if server is on different host
     baseUrl: '/api',
 
+    // Callback for auth errors
+    onAuthError: null,
+
     /**
      * Make API request
      */
@@ -25,10 +28,19 @@ const API = {
         }
 
         try {
-            const response = await fetch(url, config);
+            const response = await fetch(url, {
+                ...config,
+                credentials: 'include' // Include cookies for session
+            });
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({ error: 'Request failed' }));
+
+                // Handle auth errors
+                if (response.status === 401 && this.onAuthError) {
+                    this.onAuthError();
+                }
+
                 throw new Error(error.error || error.message || 'Request failed');
             }
 
@@ -37,6 +49,48 @@ const API = {
             console.error('API Error:', err);
             throw err;
         }
+    },
+
+    // ============================================
+    // AUTHENTICATION
+    // ============================================
+
+    async getAuthStatus() {
+        return this.request('/auth/status');
+    },
+
+    async login(username, password) {
+        return this.request('/auth/login', {
+            method: 'POST',
+            body: { username, password }
+        });
+    },
+
+    async logout() {
+        return this.request('/auth/logout', {
+            method: 'POST'
+        });
+    },
+
+    async register(username, password, displayName) {
+        return this.request('/auth/register', {
+            method: 'POST',
+            body: {
+                username,
+                password,
+                display_name: displayName
+            }
+        });
+    },
+
+    async changePassword(currentPassword, newPassword) {
+        return this.request('/auth/change-password', {
+            method: 'POST',
+            body: {
+                current_password: currentPassword,
+                new_password: newPassword
+            }
+        });
     },
 
     // ============================================

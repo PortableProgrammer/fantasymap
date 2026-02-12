@@ -33,6 +33,10 @@
                 <button id="btn-new-map" class="small-btn" title="Create New Map" disabled>+</button>
                 <button id="btn-edit-map" class="small-btn" title="Edit Map" disabled>Edit</button>
             </div>
+            <div class="selector-group user-info" id="user-info">
+                <span id="user-display-name"></span>
+                <button id="btn-logout" class="small-btn" title="Logout">Logout</button>
+            </div>
         </div>
 
         <!-- Top Toolbar -->
@@ -73,15 +77,23 @@
         <!-- Main Content Area -->
         <div class="main-content">
             <!-- Left Sidebar - Stamps -->
-            <aside class="sidebar sidebar-left">
+            <aside class="sidebar sidebar-left" id="sidebar-left">
                 <div class="sidebar-header">
                     <h2>Stamps</h2>
-                    <button id="btn-add-stamp-type" class="small-btn" title="Add Custom Stamp">+</button>
+                    <div class="sidebar-header-actions">
+                        <button id="btn-add-stamp-type" class="small-btn" title="Add Custom Stamp">+</button>
+                        <button class="sidebar-collapse-btn" id="btn-collapse-left" title="Collapse panel">&laquo;</button>
+                    </div>
                 </div>
                 <div class="stamp-palette" id="stamp-palette">
                     <!-- Stamp categories will be populated by JS -->
                 </div>
             </aside>
+
+            <!-- Left Sidebar Toggle (visible when collapsed) -->
+            <button class="sidebar-toggle sidebar-toggle-left" id="btn-toggle-left" title="Show Stamps">
+                <span class="toggle-icon">Stamps</span>
+            </button>
 
             <!-- Map Container -->
             <div class="map-wrapper">
@@ -131,11 +143,18 @@
                 </div>
             </div>
 
+            <!-- Right Sidebar Toggle (visible when collapsed) -->
+            <button class="sidebar-toggle sidebar-toggle-right" id="btn-toggle-right" title="Show Details">
+                <span class="toggle-icon">Details</span>
+            </button>
+
             <!-- Right Sidebar - Location Details -->
             <aside class="sidebar sidebar-right" id="sidebar-right">
                 <div class="sidebar-header">
                     <h2>Location Details</h2>
-                    <button id="btn-close-details" class="small-btn">×</button>
+                    <div class="sidebar-header-actions">
+                        <button class="sidebar-collapse-btn" id="btn-collapse-right" title="Collapse panel">&raquo;</button>
+                    </div>
                 </div>
                 <div class="location-details" id="location-details">
                     <p class="placeholder-text">Click on a marker to view details</p>
@@ -292,6 +311,38 @@
                 <div class="modal-footer">
                     <button id="btn-delete-map" class="btn-danger" style="display: none;">Delete Map</button>
                     <button id="btn-save-map" class="btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login/Setup Modal -->
+        <div class="modal" id="modal-auth" style="display: none;">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2 id="modal-auth-title">Login</h2>
+                </div>
+                <div class="modal-body">
+                    <p id="auth-message" class="modal-description"></p>
+                    <div class="form-group">
+                        <label for="auth-username">Username</label>
+                        <input type="text" id="auth-username" placeholder="Enter username" autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="auth-password">Password</label>
+                        <input type="password" id="auth-password" placeholder="Enter password" autocomplete="current-password">
+                    </div>
+                    <div class="form-group" id="auth-confirm-group" style="display: none;">
+                        <label for="auth-password-confirm">Confirm Password</label>
+                        <input type="password" id="auth-password-confirm" placeholder="Confirm password" autocomplete="new-password">
+                    </div>
+                    <div class="form-group" id="auth-display-name-group" style="display: none;">
+                        <label for="auth-display-name">Display Name (optional)</label>
+                        <input type="text" id="auth-display-name" placeholder="Your display name">
+                    </div>
+                    <p id="auth-error" class="form-error"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-auth-submit" class="btn-primary">Login</button>
                 </div>
             </div>
         </div>
